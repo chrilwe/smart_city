@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iot.smart_city.message.mapper.ScMessageMapper">
+
+	<insert id="add" parameterType="com.iot.smart_city.model.message.ScMessage">
+		insert into sc_message
+		(message_id,message_body,data_type,status,resend_times,timeout,exchange,queue,rout_key,
+		create_time,update_time,version)
+		values(#{messageId},#{messageBody},#{dataType},#{status},#{resendTimes},#{timeout},
+		#{exchange},#{queue},#{routKey},#{createTime},#{updateTime},#{version})
+	</insert>
+
+	<delete id="delete" parameterType="String">
+		delete from sc_message where
+		message_id=#{messageId}
+	</delete>
+
+	<update id="update" parameterType="com.iot.smart_city.model.message.ScMessage">
+		update sc_message set
+		message_body=#{messageBody},data_type=#{dataType},status=#{status},
+		resend_times=#{resendTimes},timeout=#{timeout},exchange=#{exchange},
+		queue=#{queue},rout_key=#{routKey},create_time=#{createTime},update_time=#{updateTime},
+		version=#{version}
+		where message_id=#{messageId}
+	</update>
+
+	<select id="findById" parameterType="String"
+		resultType="com.iot.smart_city.model.message.ScMessage">
+		select message_id as messageId,message_body as
+		messageBody,data_type as dataType,status,
+		resend_times as
+		resendTimes,timeout,exchange,queue,rout_key as routKey,
+		create_time as
+		createTime,update_time as updateTime,version from sc_message where
+		message_id =
+		#{messageId}
+	</select>
+
+	<update id="updateResendTimes">
+		update sc_message set
+		resend_times=#{resendTimes},status=#{status},update_time=#{updateTime},version=#{version}+1
+		where message_id=#{messageId} and version=#{version}
+	</update>
+
+	<select id="countByStatus" resultType="int">
+		select count(status) from
+		sc_message where status=#{status}
+	</select>
+
+	<select id="findList" resultType="com.iot.smart_city.model.message.ScMessage">
+		select message_id as
+		messageId,message_body as
+		messageBody,data_type as dataType,status,
+		resend_times as
+		resendTimes,timeout,exchange,queue,rout_key as routKey,
+		create_time as
+		createTime,update_time as updateTime,version from
+		sc_message where status=#{status} limit #{start},#{size}
+	</select>
+</mapper>

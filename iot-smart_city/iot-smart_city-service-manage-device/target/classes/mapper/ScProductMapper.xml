@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.iot.smart_city.manage.device.mapper.ScProductMapper">
+	<insert id="scProductAdd" parameterType="com.iot.smart_city.model.product.ScProduct">
+		insert into sc_product(product_id,product_name,node_type,is_gateway,protocol,connect_type,
+		data_type,status,create_time,description,update_time) values(#{productId},#{productName},#{nodeType},
+		#{isGateWay},#{protocol},#{connectType},#{dataType},#{status},#{createTime},#{description},#{updateTime}})
+	</insert>
+	
+	<delete id="scProductDel" parameterType="String">
+		delete from sc_product where product_id=#{productId}
+	</delete>
+	
+	<update id="scProductUpdate" parameterType="com.iot.smart_city.model.product.ScProduct">
+		update sc_product set product_name=#{productName},node_type=#{nodeType},is_gateway=#{isGateWay},
+		protocol=#{protocol},connect_type=#{connectType},
+		data_type=#{dataType},status=#{status},create_time=#{createTime},description=#{description},
+		update_time=#{updateTime} where product_id=#{productId}
+	</update>
+	
+	<select id="findById" parameterType="String" resultType="com.iot.smart_city.model.product.ScProduct">
+		select product_id as productId,product_name as productName,node_type as nodeType,is_gateway as isGateWay,
+		protocol,connect_type as connectType,
+		data_type as dataType,status,create_time as createTime,description,update_time as updateTime from sc_product where product_id=#{productId}
+	</select>
+</mapper>
