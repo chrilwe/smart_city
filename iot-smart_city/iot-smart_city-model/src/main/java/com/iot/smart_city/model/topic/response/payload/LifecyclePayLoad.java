@@ -19,4 +19,5 @@ public class LifecyclePayLoad extends PayLoad implements Serializable {
 	private String deviceName;
 	private String deviceSecret;
 	private long messageCreateTime;
+	private String type;
 }

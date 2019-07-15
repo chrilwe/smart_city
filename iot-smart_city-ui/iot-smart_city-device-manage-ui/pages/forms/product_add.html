@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>智慧城市控制中心</title>
+  <!-- plugins:css -->
+  <link rel="stylesheet" href="../../vendors/iconfonts/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/css/vendor.bundle.base.css">
+  <!-- endinject -->
+  <!-- inject:css -->
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="css/sweetalert.css">
+  <!-- endinject -->
+  <link rel="shortcut icon" href="../../images/favicon.png" />
+</head>
+<body>
+<div id="tabs5">
+<div class="page-header">
+            <h3 class="page-title">
+              添加产品
+            </h3>
+          </div>
+          <div class="row">
+            <div class="col-12 grid-margin">
+              <div class="card">
+                <div class="card-body">
+                  <form id="productAddForm" class="form-sample">
+                    <p class="card-description">
+                      产品信息
+                    </p>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">产品名称</label>
+                          <div class="col-sm-9">
+                            <input id="product_name" type="text" class="form-control" />
+                          </div>
+                        </div>
+                      </div>
+    
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">所属分类</label>
+                          <div class="col-sm-9">
+                            <select id="no" class="form-control">
+                              <option>产品</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                    </div>
+                    
+                    <p class="card-description">
+                      节点类型
+                    </p>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">节点类型</label>
+                          <div class="col-sm-4">
+                            <div class="form-check">
+                              <label class="form-check-label">
+                              <input id="node_device" type="radio" class="form-check-input" name="optionsRadio2" id="optionsRadios4" value="设备" disabled checked>
+                              设备
+                            </label>
+                            </div>
+                          </div>
+                          <div class="col-sm-5">
+                            <div class="form-check">
+                              <label class="form-check-label">
+                              <input id="node_gateway" type="radio" class="form-check-input" name="optionsRadio2" id="optionsRadios4" value="网关" disabled checked>
+                              网关
+                            </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="card-description">
+                      联网与数据
+                    </p>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">联网方式</label>
+                          <div class="col-sm-9">
+                            <select id="connect_type" class="form-control">
+                              <option>WIFI</option>
+                              <option>GRRS</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="col-md-6">
+                        <div class="form-group row">
+                          <label class="col-sm-3 col-form-label">数据格式</label>
+                          <div class="col-sm-9">
+                            <select id="data_type" class="form-control">
+                              <option>json</option>
+                              
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <p class="card-description">
+                      更多信息
+                    </p>
+                    
+                       <div class="form-group">
+                      <label for="exampleTextarea1">描述</label>
+                      <textarea id="desc" class="form-control" id="exampleTextarea1" rows="4"></textarea>
+                   
+                    </div>
+                      <button id="productAddSubmit" type="button" class="btn btn-gradient-primary btn-fw">提交</button>
+                    <button id="productCancelSubmit" type="button" class="btn btn-gradient-danger btn-fw">取消</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+ </div>       
+  
+          <!-- plugins:js -->
+  <script src="vendors/js/vendor.bundle.base.js"></script>
+  <script src="vendors/js/vendor.bundle.addons.js"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page-->
+  <!-- End plugin js for this page-->
+  <!-- inject:js -->
+  <script src="js/off-canvas.js"></script>
+  <script src="js/misc.js"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page-->
+  <script src="js/dashboard.js"></script>
+  <script src="js/jquery-1.8.2.min.js"></script>
+  <script src="js/sweetalert.min.js"></script>
+  <script src="../../js/file-upload.js"></script>
+
+  <script type="text/javascript">
+     $(function(){
+      //提交之前进行表单校验
+      $("#productAddSubmit").click(function(){
+        var pn = $("#product_name").val();
+        var nd = $("#node_device").val();
+        var ng = $("#node_gateway").val()
+        var ct = $("#connect_type").val();
+        var dt = $("#data_type").val();
+        var d = $("#desc").val();
+
+        var check = validate(pn,nd,ng,ct,dt);
+        if(check) {
+          $.ajax({
+              type: "POST",
+              url: "/manage/product/add",
+              data: $("#productAddForm").serialize(),
+              dataType: "json",
+              success: function(data){
+                if(data.isSuccess) {
+                  sweetAlert("添加成功!");
+                  clearForm();
+                  //跳转到列表页
+                  $("#tabs5").load("/pages/product/product.html");
+                } else {
+                  sweetAlert("错误消息", "添加失败!" + data.msg, "error");
+                }
+              }
+            });
+        }
+      });
+
+      //取消按钮
+      $("#productCancelSubmit").click(function(){
+        
+        clearForm();
+      });
+
+      function clearForm() {
+        $("#product_name").val("");
+        $("#node_device").val("");
+        $("#node_gateway").val("");
+        $("#connect_type").val("");
+        $("#data_type").val("");
+        $("#desc").val("");
+      }
+
+      function validate(pn,nd,ng,ct,dt) {
+        if(pn == "") {
+          sweetAlert("错误消息", "请填写产品名称!", "error");
+          return false;
+        }
+        if(nd == "" && ng == "") {
+          sweetAlert("错误消息", "请选择节点类型!", "error");
+          return false;
+        }
+        if(ct == "") {
+          sweetAlert("错误消息", "请选择联网方式!", "error");
+          return false;
+        }
+        if(dt == "") {
+          sweetAlert("错误消息", "请选择数据类型!", "error");
+          return false;
+        }
+        return true;
+      }
+  });
+  </script>
+</body>
+</html>

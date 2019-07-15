@@ -14,4 +14,5 @@ public interface ScDeviceMapper {
 	public List<ScDevice> findByProductIdAndStatus(@Param("productId")String productId,
 			@Param("status")String status);
 	public ScDevice findByName(String deviceName);
+	public ScDevice findById(String deviceId);
 }

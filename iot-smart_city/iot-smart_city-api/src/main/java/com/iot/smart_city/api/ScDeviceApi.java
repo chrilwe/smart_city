@@ -6,6 +6,7 @@ package com.iot.smart_city.api;
  */
 
 import com.iot.smart_city.model.device.ScDevice;
+import com.smart_city.common.base.ScBaseResponse;
 import com.smart_city.common.device.request.ScDeviceAddRequest;
 import com.smart_city.common.device.request.ScDeviceDelRequest;
 import com.smart_city.common.device.request.ScDeviceQueryRequest;
@@ -30,4 +31,7 @@ public interface ScDeviceApi {
 	
 	//根据id查询
 	public ScDevice findDeviceById(String id);
+	
+	//设备激活
+	public ScBaseResponse wakeUpDevice(String deviceId);
 }

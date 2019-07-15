@@ -11,4 +11,5 @@ public class ManageConfiguration {
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
+	
 }

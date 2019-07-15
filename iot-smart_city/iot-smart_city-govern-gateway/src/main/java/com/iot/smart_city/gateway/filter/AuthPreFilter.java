@@ -6,7 +6,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSON;
@@ -28,6 +30,9 @@ public class AuthPreFilter extends ZuulFilter {
 	private static final String POST = "post";
 	private static final int CODE = 401;
 	private static final String UNAUTHENTICATED = "UNAUTHENTICATED";
+
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
 	
 	@Value("${sc.cookieName}")
 	private String cookieName;
@@ -65,7 +70,13 @@ public class AuthPreFilter extends ZuulFilter {
 			return null;
 		}
 		
-		//TODO 判断登录是否过期
+		//判断登录是否过期
+		String authTokenJson = stringRedisTemplate.boundValueOps(accessToken).get();
+		if(StringUtils.isEmpty(authTokenJson)) {
+			//拒绝访问
+			this.unauthtnticated(currentContext);
+			return null;
+		}
 		return null;
 	}
 

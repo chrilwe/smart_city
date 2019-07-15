@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>智慧城市控制中心</title>
+  <!-- plugins:css -->
+  <link rel="stylesheet" href="../../vendors/iconfonts/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="../../vendors/css/vendor.bundle.base.css">
+  <!-- endinject -->
+  <!-- inject:css -->
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="css/sweetalert.css">
+  <!-- endinject -->
+  <link rel="shortcut icon" href="../../images/favicon.png" />
+</head>
+<body>
+<div id="tabs6">
+<div class="page-header">
+          </div>
+          <div class="row">
+            <div class="col-12 grid-margin">
+              <div class="card">
+                <div class="card-body">
+
+                  <form id="uploadFileForm" class="form-sample">
+                    <div class="form-group">
+                      <label>上传用户头像</label>
+                      <input type="file" name="img[]" class="file-upload-default">
+                      <div class="input-group col-xs-12">
+                        <input type="text" class="form-control file-upload-info" disabled placeholder="上传头像图片,文件大小不能超过1M">
+                        <span class="input-group-append">
+                          <button class="file-upload-browse btn btn-gradient-primary" type="button">从本地选择图片</button>
+                        </span>
+                      </div>
+                    </div>
+                   
+                    
+                      <button id="fileUploadSubmit" type="button" class="btn btn-gradient-primary btn-fw">上传</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+              <div class="col-12 grid-margin">
+                <div class="card">
+                  <div class="card-body">
+                    <form id="updatePasswordForm" class="form-sample">
+                      <div class="form-group">
+                        <h5>修改用户密码</h5>
+                          <div class="row">
+                            <div class="col-md-6">
+                              <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">旧密码:</label>
+                                <div class="col-sm-9">
+                                  <input id="pwd1" type="text" class="form-control" />
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">新密码:</label>
+                                <div class="col-sm-9">
+                                  <input id="pwd2" type="password" class="form-control" />
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">确认密码:</label>
+                                <div class="col-sm-9">
+                                  <input id="pwd3" type="password" class="form-control" />
+                                </div>
+                              </div>
+                            </div>
+          
+                          </div>
+                        </div>
+                   
+                    
+                      <button id="updatePasswordSubmit" type="button" class="btn btn-gradient-primary btn-fw">确定</button>
+                      <button id="updateCancelSubmit" type="button" class="btn btn-gradient-danger btn-fw">取消</button>
+                  </form>
+                </div>
+              </div>
+              </div>
+          </div>
+ </div>       
+  
+          <!-- plugins:js -->
+  <script src="vendors/js/vendor.bundle.base.js"></script>
+  <script src="vendors/js/vendor.bundle.addons.js"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page-->
+  <!-- End plugin js for this page-->
+  <!-- inject:js -->
+  <script src="js/off-canvas.js"></script>
+  <script src="js/misc.js"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page-->
+  <script src="js/dashboard.js"></script>
+  <script src="js/jquery-1.8.2.min.js"></script>
+  <script src="js/sweetalert.min.js"></script>
+  <script src="../../js/file-upload.js"></script>
+
+  <script type="text/javascript">
+    $(function(){
+      //上传图片
+      $("#fileUploadSubmit").click(function(){
+        $.post("/filesystem/upload",$("#uploadFileForm").serialize(),function(data){
+          if(data.isSuccess) {
+              sweetAlert("上传成功!");
+          } else {
+              sweetAlert("错误消息", "上传失败!", "error");
+          }
+        });
+      });
+
+
+      //修改密码
+      $("#updatePasswordSubmit").click(function(){
+          //非空校验
+          var pwd1 = $("#pwd1").val();
+          var pwd2 = $("#pwd2").val();
+          var pwd3 = $("#pwd3").val();
+
+          var check = validatePassword(pwd1,pwd2,pwd3);
+          if(check) {
+              $.post("/ucenter/updatePassword",{"pwd1":pwd1,"ped2":pwd2,"pwd3":pwd3},function(data){
+                if(data.isSuccess) {
+                    sweetAlert("密码修改成功!");
+                } else {
+                    sweetAlert("错误消息", "密码修改失败!" + data.msg, "error");
+                }
+              });
+          }
+      });
+
+      function validatePassword(pwd1,pwd2,pwd3) {
+
+          if(pwd1 == "") {
+            sweetAlert("错误消息", "数据不能为空!", "error");
+            return false;
+          }
+
+          if(pwd2 == "") {
+            sweetAlert("错误消息", "数据不能为空!", "error");
+            return false;
+          }
+
+          if(pwd3 == "") {
+            sweetAlert("错误消息", "数据不能为空!", "error");
+            return false;
+          }
+          if(pwd2 != pwd3) {
+            sweetAlert("错误消息", "新密码确认不一致!", "error");
+            return false;
+          }
+          return true;
+      }
+    });
+  </script>
+</body>
+</html>

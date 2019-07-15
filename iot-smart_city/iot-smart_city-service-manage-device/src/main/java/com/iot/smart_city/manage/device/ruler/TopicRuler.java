@@ -15,6 +15,9 @@ import com.smart_city.common.base.ScBaseResponse;
 import com.smart_city.common.product.topic.response.code.ScIotTopicCode;
 import com.smart_city.common.product.topic.response.msg.ScIotTopicMsg;
 
+import lombok.Data;
+import lombok.ToString;
+
 /**
  * 主题规则校验
  * @author chrilwe
@@ -22,46 +25,36 @@ import com.smart_city.common.product.topic.response.msg.ScIotTopicMsg;
  */
 public class TopicRuler {
 	
-	/**
-	 * @param type 主题类型
-	 * @param topic 主题
-	 * @return
-	 */
-	public ScBaseResponse checkTopic(String type,String topic) {
-		if(StringUtils.isEmpty(topic) || StringUtils.isEmpty(type)) {
-			throw new RuntimeException("主题类型和主题都不能为空");
+	//校验topic并且返回校验主题类型
+	public TopicCheckResult checkAndReturnTopicType(String topic) {
+		TopicCheckResult result = this.checkOnlineAndOffline(topic);
+		if(result.success) {
+			return result;
 		}
-		
-		if(!type.equals(TopicType.EVENT)
-				&&!type.equals(TopicType.LIFE_CYCLE)
-				&&!type.equals(TopicType.ON_OFF)&&!type.equals(TopicType.PROPERTY)) {
-			throw new RuntimeException("主题类型错误");
+		TopicCheckResult checkOnlineAndOffline = this.checkOnlineAndOffline(topic);
+		if(checkOnlineAndOffline.success) {
+			return checkOnlineAndOffline;
 		}
-		
-		//校验上下线通知：/as/mqtt/status/{productKey}/{deviceName}
-		
-		//校验设备属性上报通知：/sys/{productKey}/{deviceName}/thing/property/post
-		
-		//校验设备事件上报通知：/sys/{productKey}/{deviceName}/thing/event/post
-		
-		//校验设备生命周期变更通知：/sys/{productKey}/{deviceName}/thing/lifecycle
-		if(type.equals(TopicType.ON_OFF)) {
-			return this.checkOnlineAndOffline(topic);
-		} else if(type.equals(TopicType.PROPERTY)) {
-			return this.checkProperty(topic);
-		} else if(type.equals(TopicType.EVENT)) {
-			return this.checkEvent(topic);
-		} else if(type.equals(TopicType.LIFE_CYCLE)) {
-			return this.checkLifecycle(topic);
+		TopicCheckResult checkEvent = this.checkEvent(topic);
+		if(checkEvent.success) {
+			return checkEvent;
 		}
-		return new ScBaseResponse(ScIotTopicCode.SYSTEM_ERROR,ScIotTopicMsg.SYSTEM_ERROR,false);
+		TopicCheckResult checkLifecycle = this.checkLifecycle(topic);
+		if(checkLifecycle.success) {
+			return checkLifecycle;
+		}
+		TopicCheckResult checkProperty = this.checkProperty(topic);
+		if(checkProperty.success) {
+			return checkProperty;
+		}
+		return new TopicCheckResult(false,null);
 	}
 	
-	private ScBaseResponse checkOnlineAndOffline(String topic) {
+	private TopicCheckResult checkOnlineAndOffline(String topic) {
 		String substring = topic.substring(1);
 		String[] split = substring.split("/");
 		if(split.length != 5) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.ON_OFF);
 		}
 		//校验前三个参数
 		String firstParam = split[0];
@@ -69,7 +62,7 @@ public class TopicRuler {
 		String thirdParam = split[2];
 		if(!firstParam.equals("as") || !twoParam.equals("mqtt") 
 				|| !thirdParam.equals("status")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.ON_OFF);
 		}
 		
 		String productKey = split[3];
@@ -78,133 +71,105 @@ public class TopicRuler {
 		return this.checkProductKeyAndDeviceName(productKey, deviceName);
 	}
 	
-	private ScBaseResponse checkProperty(String topic) {
+	private TopicCheckResult checkProperty(String topic) {
 		String substring = topic.substring(1);
 		String[] split = substring.split("/");
 		if(split.length != 6) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.PROPERTY);
 		}
 		String firstParam = split[0];
 		String twoParam = split[1];
 		String thirdParam = split[2];
 		if(!firstParam.equals("sys")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.PROPERTY);
 		}
-		ScBaseResponse response = this.checkProductKeyAndDeviceName(firstParam, twoParam);
-		if(!response.isSuccess()) {
-			return response;
+		TopicCheckResult result = this.checkProductKeyAndDeviceName(firstParam, twoParam);
+		if(!result.success) {
+			return result;
 		}
 		String fourParam = split[3];
 		String fiveParam = split[4];
 		String sixParam = split[5];
 		if(!fourParam.equals("thing") || !fiveParam.equals("property") || !sixParam.equals("post")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.PROPERTY);
 		}
-		return new ScBaseResponse(ScIotTopicCode.SUCCESS,ScIotTopicMsg.SUCCESS,true);
+		return new TopicCheckResult(true,TopicType.PROPERTY);
 	}
 	
-	private ScBaseResponse checkEvent(String topic) {
+	private TopicCheckResult checkEvent(String topic) {
 		String substring = topic.substring(1);
 		String[] split = substring.split("/");
 		if(split.length != 6) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.EVENT);
 		}
 		String firstParam = split[0];
 		String twoParam = split[1];
 		String thirdParam = split[2];
 		if(!firstParam.equals("sys")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.EVENT);
 		}
-		ScBaseResponse response = this.checkProductKeyAndDeviceName(firstParam, twoParam);
-		if(!response.isSuccess()) {
-			return response;
+		TopicCheckResult result = this.checkProductKeyAndDeviceName(firstParam, twoParam);
+		if(!result.success) {
+			return result;
 		}
 		String fourParam = split[3];
 		String fiveParam = split[4];
 		String sixParam = split[5];
 		if(!fourParam.equals("thing") || !fiveParam.equals("event") || !sixParam.equals("post")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.EVENT);
 		}
-		return new ScBaseResponse(ScIotTopicCode.SUCCESS,ScIotTopicMsg.SUCCESS,false);
+		return new TopicCheckResult(true,TopicType.EVENT);
 	}
 	
-	private ScBaseResponse checkLifecycle(String topic) {
+	private TopicCheckResult checkLifecycle(String topic) {
 		String substring = topic.substring(1);
 		String[] split = substring.split("/");
 		if(split.length != 6) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.LIFE_CYCLE);
 		}
 		String firstParam = split[0];
 		String twoParam = split[1];
 		String thirdParam = split[2];
 		if(!firstParam.equals("sys")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.LIFE_CYCLE);
 		}
-		ScBaseResponse response = this.checkProductKeyAndDeviceName(firstParam, twoParam);
-		if(!response.isSuccess()) {
-			return response;
+		TopicCheckResult result = this.checkProductKeyAndDeviceName(firstParam, twoParam);
+		if(!result.success) {
+			return result;
 		}
 		String fourParam = split[3];
 		String fiveParam = split[4];
 		String sixParam = split[5];
 		if(!fourParam.equals("thing") || !fiveParam.equals("lifecycle")) {
-			return new ScBaseResponse(ScIotTopicCode.ERROR_PARAM,ScIotTopicMsg.ERROR_PARAM,false);
+			return new TopicCheckResult(false,TopicType.LIFE_CYCLE);
 		}
-		return new ScBaseResponse(ScIotTopicCode.SUCCESS,ScIotTopicMsg.SUCCESS,false);
+		return new TopicCheckResult(true,TopicType.LIFE_CYCLE);
 	}
 	
-	private ScBaseResponse checkProductKeyAndDeviceName(String productKey,String deviceName) {
+	private TopicCheckResult checkProductKeyAndDeviceName(String productKey,String deviceName) {
 		SpringBeanContains bean = new SpringBeanContains();
 		ScProductMapper scProductMapper = bean.getBean(ScProductMapper.class);
 		ScProduct findById = scProductMapper.findById(productKey);
 		if(findById == null) {
-			return new ScBaseResponse(ScIotTopicCode.PRODUCT_NULL,ScIotTopicMsg.PRODUCT_NULL,false);
+			return new TopicCheckResult(false,null);
 		}
 		ScDeviceMapper scDeviceMapper = bean.getBean(ScDeviceMapper.class);
 		ScDevice findByName = scDeviceMapper.findByName(deviceName);
 		if(findByName == null) {
-			return new ScBaseResponse(ScIotTopicCode.DEVICE_NULL,ScIotTopicMsg.DEVICE_NULL,false);
+			return new TopicCheckResult(false,null);
 		}
-		return new ScBaseResponse(ScIotTopicCode.SUCCESS,ScIotTopicMsg.SUCCESS,true);
+		return new TopicCheckResult(true,null);
 	}
+
 	
-	//从topic中获取deviceName和productKey
-	public Map<String, String> getProductKeyAndDeviceNameFromTopic(String topic,String type) {
-		//校验topic
-		ScBaseResponse checkTopic = this.checkTopic(type, topic);
-		if(checkTopic.isSuccess()) {
-			Map<String,String> map = new HashMap<>();
-			if(type.equals(TopicType.ON_OFF)) {
-				String substring = topic.substring(1);
-				String[] split = substring.split("/");
-				String productKey = split[3];
-				String deviceName = split[4];
-				map.put("productKey", productKey);
-				map.put("deviceName", deviceName);
-			} else if(type.equals(TopicType.PROPERTY)) {
-				String substring = topic.substring(1);
-				String[] split = substring.split("/");
-				String productKey = split[1];
-				String deviceName = split[2];
-				map.put("productKey", productKey);
-				map.put("deviceName", deviceName);
-			} else if(type.equals(TopicType.EVENT)) {
-				String substring = topic.substring(1);
-				String[] split = substring.split("/");
-				String productKey = split[1];
-				String deviceName = split[2];
-				map.put("productKey", productKey);
-				map.put("deviceName", deviceName);
-			} else if(type.equals(TopicType.LIFE_CYCLE)) {
-				String substring = topic.substring(1);
-				String[] split = substring.split("/");
-				String productKey = split[1];
-				String deviceName = split[2];
-				map.put("productKey", productKey);
-				map.put("deviceName", deviceName);
-			}
-			return map;
+	@Data
+	@ToString
+	public class TopicCheckResult {
+		public boolean success;
+		public String type;
+		public TopicCheckResult(boolean success, String type) {
+			this.success = success;
+			this.type = type;
 		}
-		return null;
 	}
 }

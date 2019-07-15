@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>智慧城市控制中心</title>
+  <!-- plugins:css -->
+  <link rel="stylesheet" href="vendors/iconfonts/mdi/css/materialdesignicons.min.css">
+  <link rel="stylesheet" href="vendors/css/vendor.bundle.base.css">
+  <!-- endinject -->
+  <!-- inject:css -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/sweetalert.css">
+  <!-- endinject -->
+  <link rel="shortcut icon" href="images/favicon.png" />
+</head>
+<body>
+<div id="tabs1">
+<div class="page-header">
+            <h3 class="page-title">
+              产品列表
+            </h3>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><button id="addProduct" type="button" class="btn btn-gradient-primary btn-sm">添加产品</button></li>
+                <li class="breadcrumb-item"><button id="refreshProduct" type="button" class="btn btn-gradient-primary btn-sm">刷新数据</button></li>
+              </ol>
+            </nav>
+          </div>
+            
+            <div class="col-lg-12 stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">查询产品信息</h4>
+                  <p class="card-description">
+                      <div class="search-field d-none d-md-block">
+                      <form class="d-flex align-items-center h-100" action="#">
+                        <div class="input-group">
+                          <div class="input-group-prepend bg-transparent">
+                              <i class="input-group-text border-0 mdi mdi-magnify"></i>                
+                          </div>
+                          <input id="productSearch" type="text" class="form-control bg-transparent border-0" placeholder="输入产品名称">
+                        </div>
+                      </form>
+                    </div>
+                  </p>
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>
+                          产品名称
+                        </th>
+                        <th>
+                          productKey
+                        </th>
+                        <th>
+                          节点类型
+                        </th>
+                        <th>
+                          创建时间
+                        </th>
+                        <th>
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="productTable">
+                      
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="footer">
+              <button id="productPrePage" type="button" class="btn btn-gradient-primary btn-rounded btn-fw">上一页</button> <button id="productNextPage" type="button" class="btn btn-gradient-primary btn-rounded btn-fw">下一页</button>
+            </div>
+            <p style="font: 3">页码:1/2   总记录：10</p>
+          </div>
+   </div>     
+  
+          <!-- plugins:js -->
+  <script src="vendors/js/vendor.bundle.base.js"></script>
+  <script src="vendors/js/vendor.bundle.addons.js"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page-->
+  <!-- End plugin js for this page-->
+  <!-- inject:js -->
+  <script src="js/off-canvas.js"></script>
+  <script src="js/misc.js"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page-->
+  <script src="js/dashboard.js"></script>
+  <script src="js/jquery-1.8.2.min.js"></script>
+  <script src="js/sweetalert.min.js"></script>
+
+  <script type="text/javascript">
+    $(function(){
+        var keyword = $("#productSearch").val();//关键字
+        var total = 0;
+        var currentPage = 1;
+        var pageSize = 10;
+        var totalPage = 0;
+         //添加产品面板
+        $("#addProduct").click(function(){
+          $("#tabs1").load("/pages/forms/product_add.html");
+        });
+
+        //加载产品列表
+        $.ajax({
+            type: "GET",
+            url: "/manage/product/query",
+            data: {'page':1,'rows':2,'keyword':keyword},
+            dataType: "json",
+            success: function(data){
+              createTable(data);
+              total = 2;
+            }
+        });
+
+        function createTable(data) {
+          var code = document.getElementById("productTable");
+              var len = data.productInfos.length;
+              var productData = "";
+              if(len > 0) {
+                for(var i = 0;i < len;i++) {
+                    var productname = data.productInfos[i].scProduct.productName;
+                    var productkey = data.productInfos[i].scProduct.productId;
+                    var nodetype = data.productInfos[i].scProduct.nodeType;
+                    var createtime = data.productInfos[i].scProduct.createTime;
+
+                    productData = productData + '<tr class="table-primary"><td>' + productname + "</td><td>" + productkey + "</td><td>" +nodetype+ "</td><td>" +createtime+ "</td><td>" + '<button id="find_'+productkey+'"'+' type="button" class="btn btn-gradient-primary btn-sm">查看</button> <button id="del_'+productkey+'"'+' type="button" class="btn btn-gradient-primary btn-sm">删除</button></td></tr>';
+
+                }
+                code.innerHTML = productData;
+
+                //点击事件
+                for(var i = 0;i < len;i++) {
+                  var productkey = data.productInfos[i].scProduct.productId;
+                  $("#find_"+productkey).click(function(){
+                    alert("查询"+productkey);
+                  });
+                  $("#del_"+productkey).click(function(){
+                    sweetAlert({
+                      title: "你确定要删除吗?",
+                      text: "删除后将不能恢复!",
+                      type: "warning",
+                      showCancelButton: true,
+                      confirmButtonColor: "#DD6B55",
+                      confirmButtonText: "YES",
+                      closeOnConfirm: false
+                    }, function(){
+                      $.ajax({
+                        type: "GET",
+                        url: "/manage/product/delete",
+                        data: {'productId':productkey},
+                        dataType: "json",
+                        success: function(data){
+                          if(data.isSuccess) {
+                              swal("已删除!",
+                              "数据已删除",
+                              "success");
+                              //重新加载列表
+                              $("#tabs1").load("/pages/product/product.html");
+                          } else {
+                            sweetAlert("错误消息", "删除失败!" + data.msg, "error");
+                          }
+                        }
+                      });
+                      
+                    });
+                  });
+                }
+              }
+        }
+
+        //上一页下一页
+        $("#productPrePage").click(function(){
+          if(currentPage > 1) {
+            currentPage = currentPage - 1;
+            $.ajax({
+              type: "GET",
+              url: "/manage/product/query",
+              data: {'page':currentPage,'rows':pageSize,'keyword':keyword},
+              dataType: "json",
+              success: function(data){
+                createTable(data);
+              }
+            });
+          }
+        });
+        $("#productNextPage").click(function(){
+          if(currentPage < totalPage) {
+            currentPage = currentPage + 1;
+            $.ajax({
+              type: "GET",
+              url: "/manage/product/query",
+              data: {'page':currentPage,'rows':pageSize,'keyword':keyword},
+              dataType: "json",
+              success: function(data){
+                createTable(data);
+              }
+            });
+          }
+        });
+    });
+  </script>
+</body>
+</html>

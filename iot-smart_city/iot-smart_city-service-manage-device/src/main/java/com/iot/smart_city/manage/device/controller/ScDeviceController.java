@@ -10,6 +10,7 @@ import com.iot.smart_city.api.ScDeviceApi;
 import com.iot.smart_city.manage.device.service.ScDeviceService;
 import com.iot.smart_city.model.device.ScDevice;
 import com.smart_city.common.base.ScBaseController;
+import com.smart_city.common.base.ScBaseResponse;
 import com.smart_city.common.device.request.ScDeviceAddRequest;
 import com.smart_city.common.device.request.ScDeviceDelRequest;
 import com.smart_city.common.device.request.ScDeviceQueryRequest;
@@ -105,6 +106,16 @@ public class ScDeviceController extends ScBaseController implements ScDeviceApi 
 	public ScDevice findDeviceById(String id) {
 		
 		return scDeviceService.findDeviceById(id);
+	}
+	
+	/**
+	 * 设备激活
+	 */
+	@Override
+	@GetMapping("/wakeup")
+	public ScBaseResponse wakeUpDevice(String deviceId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
