@@ -6,4 +6,6 @@ public interface ScDeviceCode {
 	public static final int PARAM_NULL = 10002;
 	public static final int DEVICE_NO_EXISTS = 10003;
 	public static final int DEVICE_STARTED = 10004;
+	public static final int DEVICE_ONLINE = 10005;
+	public static final int PLEASE_WAKEUP_DEVICE = 10006;
 }
