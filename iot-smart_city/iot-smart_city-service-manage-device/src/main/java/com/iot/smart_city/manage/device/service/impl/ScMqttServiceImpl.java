@@ -3,6 +3,8 @@ package com.iot.smart_city.manage.device.service.impl;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -12,7 +14,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.iot.smart_city.manage.device.group.MqttClientGroup;
@@ -23,7 +27,11 @@ import com.iot.smart_city.util.mqtt_client.GenerateMessageNum;
 import com.smart_city.common.device.response.MqttResponse;
 import com.smart_city.common.device.response.code.ScDeviceCode;
 import com.smart_city.common.device.response.msg.ScDeviceMsg;
-
+/**
+ * mqtt服务
+ * @author chrilwe
+ *
+ */
 @Service
 public class ScMqttServiceImpl implements ScMqttService {
 	
@@ -37,6 +45,9 @@ public class ScMqttServiceImpl implements ScMqttService {
 	private boolean autoReconnect;
 	@Value("${mqtt.keep_alive}")
 	private int keepAlive;
+	
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
 
 	/**
 	 * 发布内容
@@ -96,17 +107,23 @@ public class ScMqttServiceImpl implements ScMqttService {
 
 		return options;
 	}
-
+	
+	/**
+	 * 连接到mqtt服务器
+	 * 对于分布式多服务部署情况，采用rabbitmq通知其中一个已连接的客户端实例执行相应的业务
+	 */
 	@Override
-	public MqttResponse connect(String clientId) throws MqttException {
+	public MqttResponse connect(String clientId,HttpServletRequest request) throws MqttException {
 		MqttConnectOptions options = this.options();
 		MqttClient mqttClient = new MqttClient(mqttServerUri, clientId);
-		mqttClient.setCallback(new ScMqttCallBackService());
+		mqttClient.setCallback(new ScMqttCallBackService(request));
 		
 		IMqttToken connectWithResult = mqttClient.connectWithResult(options);
 		boolean complete = connectWithResult.isComplete();
+		//连接成功，将连接存入内存，并且将当前服务器的地址存入redis，作为连接标记
 		if(complete) {
 			MqttClientGroup.getInstance().put(clientId, mqttClient);
+			stringRedisTemplate.boundValueOps(clientId).set(request.getRequestURI());;
 			return new MqttResponse(ScDeviceCode.SUCCESS,ScDeviceMsg.SUCCESS,true,clientId,null);
 		}
 		return new MqttResponse(ScDeviceCode.SYSTEM_ERROR,ScDeviceMsg.SYSTEM_ERROR,false,clientId,null);

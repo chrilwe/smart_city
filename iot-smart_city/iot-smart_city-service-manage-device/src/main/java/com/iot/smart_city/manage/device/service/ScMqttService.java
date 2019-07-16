@@ -2,6 +2,8 @@ package com.iot.smart_city.manage.device.service;
 
 import java.io.UnsupportedEncodingException;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 
@@ -15,5 +17,5 @@ public interface ScMqttService {
 	//订阅
 	public MqttResponse subscribe(String clientId,String topic) throws MqttException;
 	//连接到mqtt服务器
-	public MqttResponse connect(String clientId) throws MqttException;
+	public MqttResponse connect(String clientId,HttpServletRequest request) throws MqttException;
 }

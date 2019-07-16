@@ -33,4 +33,7 @@ public interface ScDeviceService {
 	
 	//设备激活
 	public ScBaseResponse wakeUpDevice(String deviceId,HttpServletRequest request) throws MqttException;
+
+	//订阅主题
+	public ScBaseResponse sub(String topic,String deviceName);
 }
